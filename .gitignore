@@ -1,0 +1,23 @@
+# -*- mode: gitignore; -*-
+
+#Archivos temporales de emacs
+
+\#*\#
+.\#*
+
+#Archivos org-mode 
+.Org*
+.org*
+
+# Archivos comprimidos, ejecutables y de estilo
+.zip
+.exe
+.css
+
+# Archivos o directorios relacionados con Doxygen
+Doxygen*
+
+html/
+Documentation/
+Bitacora/
+
