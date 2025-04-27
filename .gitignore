@@ -21,3 +21,6 @@ html/
 Documentation/
 Bitacora/
 
+# Directorio Build del Proyecto
+
+build/

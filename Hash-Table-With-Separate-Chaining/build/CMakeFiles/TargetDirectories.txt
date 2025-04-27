@@ -1,3 +1,0 @@
-/home/carlos/Documents/Hash-Table-With-Separate-Chaining/Hash-Table-With-Separate-Chaining/build/CMakeFiles/hash_table_with_separate_chaining.dir
-/home/carlos/Documents/Hash-Table-With-Separate-Chaining/Hash-Table-With-Separate-Chaining/build/CMakeFiles/edit_cache.dir
-/home/carlos/Documents/Hash-Table-With-Separate-Chaining/Hash-Table-With-Separate-Chaining/build/CMakeFiles/rebuild_cache.dir
