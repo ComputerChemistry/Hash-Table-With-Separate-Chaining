@@ -1,0 +1,22 @@
+# Archivos y carpetas específicos de CLion
+.idea/
+
+# Archivos y carpetas de compilación de CMake/CLion
+cmake-build-*/
+
+# Archivos ejecutables (Windows, Linux/macOS)
+*.exe
+*
+
+# Archivos objeto y librerías estáticas/dinámicas
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+
+# Otros archivos temporales comunes
+*~
+.DS_Store

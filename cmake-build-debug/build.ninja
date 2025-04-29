@@ -53,6 +53,7 @@ build CMakeFiles/Hash_Table_With_Separate_Chaining.dir/main.cpp.obj: CXX_COMPILE
   CONFIG = Debug
   DEP_FILE = CMakeFiles\Hash_Table_With_Separate_Chaining.dir\main.cpp.obj.d
   FLAGS = -g -std=gnu++14 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Laser/CLionProjects/Hash-Table-With-Separate-Chaining -IC:/Users/Laser/CLionProjects/Hash-Table-With-Separate-Chaining/AlgoritmoHashing
   OBJECT_DIR = CMakeFiles\Hash_Table_With_Separate_Chaining.dir
   OBJECT_FILE_DIR = CMakeFiles\Hash_Table_With_Separate_Chaining.dir
 
@@ -106,13 +107,6 @@ build Hash_Table_With_Separate_Chaining: phony Hash_Table_With_Separate_Chaining
 
 # =============================================================================
 # Folder targets.
-
-# =============================================================================
-
-#############################################
-# Folder: C:/Users/Laser/CLionProjects/Hash-Table-With-Separate-Chaining/cmake-build-debug
-
-build codegen: phony
 
 # =============================================================================
 
