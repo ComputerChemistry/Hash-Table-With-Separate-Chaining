@@ -1,0 +1,4 @@
+C:\Users\Laser\scoop\apps\cmake\current\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/Laser/scoop/shims/ninja.exe -DCMAKE_C_COMPILER=C:/Users/Laser/scoop/apps/gcc/current/bin/gcc.exe -DCMAKE_CXX_COMPILER=C:/Users/Laser/scoop/apps/gcc/current/bin/g++.exe -G Ninja -S C:\Users\Laser\CLionProjects\Hash-Table-With-Separate-Chaining -B C:\Users\Laser\CLionProjects\Hash-Table-With-Separate-Chaining\cmake-build-debug
+-- Configuring done (0.3s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/Users/Laser/CLionProjects/Hash-Table-With-Separate-Chaining/cmake-build-debug

@@ -1,0 +1,60 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "4.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Hash_Table_With_Separate_Chaining",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "Hash_Table_With_Separate_Chaining::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Hash_Table_With_Separate_Chaining-Debug-32e0b232ff65c07f1d97.json",
+					"name" : "Hash_Table_With_Separate_Chaining",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/Laser/CLionProjects/Hash-Table-With-Separate-Chaining/cmake-build-debug",
+		"source" : "C:/Users/Laser/CLionProjects/Hash-Table-With-Separate-Chaining"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 8
+	}
+}
