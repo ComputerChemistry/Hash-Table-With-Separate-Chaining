@@ -1,3 +1,11 @@
+/**  
+ * \file TablaHash.tpp
+ * Este archivo contiene las implementaciones de la clase template `TablaHash`.
+ * Define el comportamiento de métodos para manejar tablas hash con diferentes técnicas de colisión.
+ * \author Joan Antonio Lazaro Silva
+ * \date 06/05/2025
+ */
+
 #ifndef TABLA_HASH_TPP
 #define TABLA_HASH_TPP
 
@@ -9,17 +17,21 @@
 #include <iostream>
 
 template <typename K, typename V>
+/** \brief Constructor por defecto de HashEntry, marca la entrada como no ocupada ni eliminada */
 TablaHash<K, V>::HashEntry::HashEntry() : ocupado(false), eliminado(false) {}
 
 template <typename K, typename V>
+/** \brief Constructor de HashEntry con clave y valor, marca la entrada como ocupada */
 TablaHash<K, V>::HashEntry::HashEntry(const K& k, const V& v)
     : clave(k), valor(v), ocupado(true), eliminado(false) {}
 
 template <typename K, typename V>
+/** \brief Inicializa las estadísticas a cero */
 TablaHash<K, V>::Estadisticas::Estadisticas()
     : inserciones(0), busquedas(0), eliminaciones(0), colisiones(0), rehashes(0) {}
 
 template <typename K, typename V>
+/** \brief Reinicia todas las estadísticas a cero */
 void TablaHash<K, V>::Estadisticas::reset() {
     inserciones = 0;
     busquedas = 0;
@@ -29,6 +41,14 @@ void TablaHash<K, V>::Estadisticas::reset() {
 }
 
 template <typename K, typename V>
+/** 
+ * \brief Constructor principal de TablaHash
+ * \param capacidadInicial Capacidad inicial mínima (se asegura que sea al menos CAPACIDAD_MINIMA)
+ * \param factorMax Factor de carga máximo, entre 0.4 y 0.95
+ * \param factorMin Factor de carga mínimo, entre 0.1 y 0.5
+ * \param metodoColision Método de resolución de colisiones a usar
+ * \throw invalid_argument Si los factores de carga no cumplen los rangos o si min > max
+ */
 TablaHash<K, V>::TablaHash(const size_t capacidadInicial, const float factorMax, const float factorMin, const MetodoColision metodoColision)
     : capacidad(std::max(capacidadInicial, CAPACIDAD_MINIMA)),
       elementos(0),
@@ -49,12 +69,14 @@ TablaHash<K, V>::TablaHash(const size_t capacidadInicial, const float factorMax,
 }
 
 template <typename K, typename V>
+/** \brief Función hash principal que utiliza std::hash y módulo con la capacidad */
 size_t TablaHash<K, V>::funcionHash(const K& clave) const {
     std::hash<K> hashFunc;
     return hashFunc(clave) % capacidad;
 }
 
 template <typename K, typename V>
+/** \brief Función hash secundaria usada en doble hashing */
 size_t TablaHash<K, V>::funcionHashSecundaria(const K& clave) const {
     std::hash<K> hashFunc;
     const size_t h2 = 1 + (hashFunc(clave) % (capacidad - 1));
@@ -62,11 +84,17 @@ size_t TablaHash<K, V>::funcionHashSecundaria(const K& clave) const {
 }
 
 template <typename K, typename V>
+/** \brief Calcula el factor de carga actual */
 float TablaHash<K, V>::factorCarga() const {
     return static_cast<float>(elementos) / capacidad;
 }
 
 template <typename K, typename V>
+/**
+ * \brief Realiza un rehash a una nueva capacidad
+ * \param nuevaCapacidad nueva capacidad para la tabla hash
+ * \details Reposiciona todos los elementos existentes según la nueva capacidad y método de colisión.
+ */
 void TablaHash<K, V>::rehash(const size_t nuevaCapacidad) {
     if (debugMode) {
         std::cout << "Rehashing desde capacidad " << capacidad << " a " << nuevaCapacidad << std::endl;
@@ -99,6 +127,7 @@ void TablaHash<K, V>::rehash(const size_t nuevaCapacidad) {
 }
 
 template <typename K, typename V>
+/** \brief Template auxiliar que convierte un valor cualquiera a string usando stringstream */
 template <typename T>
 std::string TablaHash<K, V>::any_to_string(const T& valor) {
     std::ostringstream oss;
@@ -107,6 +136,7 @@ std::string TablaHash<K, V>::any_to_string(const T& valor) {
 }
 
 template <typename K, typename V>
+/** \brief Template auxiliar que convierte un string a un tipo T usando stringstream */
 template <typename T>
 T TablaHash<K, V>::string_to_any(const std::string& str) const {
     std::istringstream iss(str);
@@ -116,6 +146,13 @@ T TablaHash<K, V>::string_to_any(const std::string& str) const {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Inserta un elemento en la tabla hash
+ * \param clave Clave del elemento
+ * \param valor Valor asociado
+ * \return true si la inserción fue exitosa, false si la clave ya existía
+ * \details Realiza rehash si el factor de carga excede el máximo configurado.
+ */
 bool TablaHash<K, V>::insertar(const K& clave, const V& valor) {
     if (factorCarga() > factorCargaMax)
         rehash(capacidad * 2);
@@ -172,6 +209,11 @@ bool TablaHash<K, V>::insertar(const K& clave, const V& valor) {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Busca un elemento en la tabla por clave
+ * \param clave Clave a buscar
+ * \return valor asociado envuelto en std::optional, o nullopt si no existe
+ */
 std::optional<V> TablaHash<K, V>::buscar(const K& clave) const {
     ++stats.busquedas;
 
@@ -211,6 +253,11 @@ std::optional<V> TablaHash<K, V>::buscar(const K& clave) const {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Elimina un elemento de la tabla por su clave
+ * \param clave Clave del elemento a borrar
+ * \return true si la clave fue encontrada y eliminada, false si no
+ */
 bool TablaHash<K, V>::eliminar(const K& clave) {
     if (metodo == ENCADENAMIENTO) {
         auto& lista = listas[funcionHash(clave)];
@@ -258,6 +305,9 @@ bool TablaHash<K, V>::eliminar(const K& clave) {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Muestra todos los elementos de la tabla en formato tabular
+ */
 void TablaHash<K, V>::mostrar() const {
     constexpr int anchoClave = 15;
     constexpr int anchoValor = 30;
@@ -287,6 +337,9 @@ void TablaHash<K, V>::mostrar() const {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Muestra estadísticas básicas de la tabla hash
+ */
 void TablaHash<K, V>::mostrarEstadisticas() const {
     std::cout << "\n=== Estadísticas ===\n";
     std::cout << "Inserciones: " << stats.inserciones << "\n";
@@ -301,6 +354,9 @@ void TablaHash<K, V>::mostrarEstadisticas() const {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Muestra la distribución de elementos según el método de colisión
+ */
 void TablaHash<K, V>::mostrarDistribucion() const {
     std::cout << "\n=== Distribución ===\n";
     if (metodo == ENCADENAMIENTO) {
@@ -318,6 +374,10 @@ void TablaHash<K, V>::mostrarDistribucion() const {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Cambia el método de resolución de colisiones y rehace la tabla
+ * \param nuevoMetodo Nuevo método a aplicar
+ */
 void TablaHash<K, V>::cambiarMetodo(const MetodoColision nuevoMetodo) {
     if (nuevoMetodo != metodo) {
         metodo = nuevoMetodo;
@@ -326,6 +386,12 @@ void TablaHash<K, V>::cambiarMetodo(const MetodoColision nuevoMetodo) {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Configura los factores máximo y mínimo de carga de la tabla
+ * \param nuevoFactorMax Nuevo factor máximo (entre 0.4 y 0.95)
+ * \param nuevoFactorMin Nuevo factor mínimo (entre 0.1 y 0.5)
+ * \throw invalid_argument Si los factores no cumplen las restricciones
+ */
 void TablaHash<K, V>::configurarFactorCarga(const float nuevoFactorMax, const float nuevoFactorMin) {
     if (nuevoFactorMax < FACTOR_MAX_MINIMO || nuevoFactorMax > FACTOR_MAX_MAXIMO)
         throw std::invalid_argument("Factor carga máximo debe estar entre 0.4 y 0.95");
@@ -339,6 +405,10 @@ void TablaHash<K, V>::configurarFactorCarga(const float nuevoFactorMax, const fl
 }
 
 template <typename K, typename V>
+/**
+ * \brief Carga elementos de prueba aleatorios en la tabla
+ * \param cantidad Número de elementos a insertar
+ */
 void TablaHash<K, V>::cargarDatosPrueba(const size_t cantidad) {
     vaciar();
 
@@ -352,6 +422,7 @@ void TablaHash<K, V>::cargarDatosPrueba(const size_t cantidad) {
 }
 
 template <typename K, typename V>
+/** \brief Vacía completamente la tabla y resetea estadísticas */
 void TablaHash<K, V>::vaciar() {
     for (size_t i = 0; i < capacidad; ++i) {
         listas[i].clear();
@@ -362,6 +433,11 @@ void TablaHash<K, V>::vaciar() {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Guarda la tabla en un archivo de texto
+ * \param nombreArchivo Nombre del archivo donde se guardará la tabla
+ * \return true si se guardó correctamente, false en caso contrario
+ */
 bool TablaHash<K, V>::guardarEnArchivo(const std::string& nombreArchivo) {
     std::ofstream archivo(nombreArchivo);
     if (!archivo.is_open()) {
@@ -392,6 +468,11 @@ bool TablaHash<K, V>::guardarEnArchivo(const std::string& nombreArchivo) {
 }
 
 template <typename K, typename V>
+/**
+ * \brief Carga una tabla desde un archivo de texto
+ * \param nombreArchivo Nombre del archivo a cargar
+ * \return true si se cargó correctamente, false en caso contrario
+ */
 bool TablaHash<K, V>::cargarDesdeArchivo(const std::string& nombreArchivo) {
     std::ifstream archivo(nombreArchivo);
     if (!archivo.is_open()) {
@@ -447,12 +528,14 @@ bool TablaHash<K, V>::cargarDesdeArchivo(const std::string& nombreArchivo) {
 }
 
 template <typename K, typename V>
+/** \brief Activa o desactiva el modo debug */
 void TablaHash<K, V>::toggleDebugMode() {
     debugMode = !debugMode;
     std::cout << "Modo debug " << (debugMode ? "activado." : "desactivado.") << "\n";
 }
 
 template <typename K, typename V>
+/** \brief Devuelve el nombre del método actual de resolución de colisiones */
 std::string TablaHash<K, V>::nombreMetodo() const {
     switch (metodo) {
         case ENCADENAMIENTO: return "Encadenamiento";
@@ -463,9 +546,10 @@ std::string TablaHash<K, V>::nombreMetodo() const {
     }
 }
 
-// Implementación Iterator...
+// Implementación de la clase iteradora Iterator
 
 template <typename K, typename V>
+/** \brief Busca el siguiente elemento válido para el iterador */
 void TablaHash<K, V>::Iterator::encontrarSiguienteElemento() {
     while (indice < tabla->capacidad) {
         if (tabla->metodo == ENCADENAMIENTO) {
@@ -485,6 +569,7 @@ void TablaHash<K, V>::Iterator::encontrarSiguienteElemento() {
 }
 
 template <typename K, typename V>
+/** \brief Constructor del iterador */
 TablaHash<K, V>::Iterator::Iterator(TablaHash<K, V>* t, const size_t i)
     : tabla(t), indice(i) {
     if (tabla->metodo == ENCADENAMIENTO) {
@@ -499,6 +584,7 @@ TablaHash<K, V>::Iterator::Iterator(TablaHash<K, V>* t, const size_t i)
 }
 
 template <typename K, typename V>
+/** \brief Operador de desreferencia para obtener el elemento actual */
 std::pair<K, V> TablaHash<K, V>::Iterator::operator*() const {
     if (tabla->metodo == ENCADENAMIENTO) {
         return *listIt;
@@ -509,6 +595,7 @@ std::pair<K, V> TablaHash<K, V>::Iterator::operator*() const {
 }
 
 template <typename K, typename V>
+/** \brief Operador de incremento para avanzar el iterador */
 typename TablaHash<K, V>::Iterator& TablaHash<K, V>::Iterator::operator++() {
     if (tabla->metodo == ENCADENAMIENTO) {
         ++listIt;
@@ -527,17 +614,20 @@ typename TablaHash<K, V>::Iterator& TablaHash<K, V>::Iterator::operator++() {
 }
 
 template <typename K, typename V>
+/** \brief Operador de igualdad */
 bool TablaHash<K, V>::Iterator::operator==(const Iterator& otro) const {
     return tabla == otro.tabla && indice == otro.indice &&
         (tabla->metodo != ENCADENAMIENTO || listIt == otro.listIt);
 }
 
 template <typename K, typename V>
+/** \brief Operador de desigualdad */
 bool TablaHash<K, V>::Iterator::operator!=(const Iterator& otro) const {
     return !(*this == otro);
 }
 
 template <typename K, typename V>
+/** \brief Devuelve el iterador al inicio */
 typename TablaHash<K, V>::Iterator TablaHash<K, V>::begin() {
     if (metodo == ENCADENAMIENTO) {
         size_t start = 0;
@@ -551,6 +641,7 @@ typename TablaHash<K, V>::Iterator TablaHash<K, V>::begin() {
 }
 
 template <typename K, typename V>
+/** \brief Devuelve el iterador al final */
 typename TablaHash<K, V>::Iterator TablaHash<K, V>::end() {
     return Iterator(this, capacidad);
 }
