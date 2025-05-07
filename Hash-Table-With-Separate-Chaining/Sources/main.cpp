@@ -1,4 +1,11 @@
-//Main.cpp
+/**  
+ * \file main.cpp
+ * Implementación del programa principal para demostrar el uso de la clase TablaHash.
+ * Permite interacción vía consola con menú para realizar operaciones sobre la tabla hash.
+ * \author Joan Antonio Lazaro Silva
+ * \date 06/05/2025
+ */
+
 #include "TablaHash.hpp"
 #include <iostream>
 #include <string>
@@ -8,12 +15,12 @@
 #include <vector>
 #include <iomanip>
 
-// Funciones auxiliares
-
+/** \brief Imprime un marco decorativo en consola */
 void imprimirMarco() {
     std::cout << "+-----------------------------------------------------------+\n";
 }
 
+/** \brief Imprime el menú principal con las opciones disponibles */
 void imprimirMenu() {
     imprimirMarco();
     std::cout << "           DEMOSTRACIÓN DE TABLA HASH\n";
@@ -38,6 +45,7 @@ void imprimirMenu() {
     imprimirMarco();
 }
 
+/** \brief Imprime el menú para seleccionar el método de resolución */
 void imprimirMenuMetodos() {
     imprimirMarco();
     std::cout << "       MÉTODOS DE RESOLUCIÓN DE COLISIONES\n";
@@ -50,11 +58,17 @@ void imprimirMenuMetodos() {
     imprimirMarco();
 }
 
+/** \brief Limpia el buffer de entrada estándar para evitar errores */
 void limpiarBuffer() {
     std::cin.clear();
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
+/** 
+ * \brief Solicita y obtiene un número entero desde consola
+ * \param mensaje Mensaje que se muestra para solicitar el entero
+ * \return Entero ingresado por el usuario
+ */
 int obtenerEntero(const std::string& mensaje) {
     int valor;
     std::cout << mensaje;
@@ -66,6 +80,11 @@ int obtenerEntero(const std::string& mensaje) {
     return valor;
 }
 
+/** 
+ * \brief Solicita y obtiene un número flotante desde consola
+ * \param mensaje Mensaje que se muestra para solicitar el flotante
+ * \return Valor flotante ingresado por el usuario
+ */
 float obtenerFlotante(const std::string& mensaje) {
     float valor;
     std::cout << mensaje;
@@ -77,6 +96,11 @@ float obtenerFlotante(const std::string& mensaje) {
     return valor;
 }
 
+/** 
+ * \brief Solicita y obtiene una cadena desde consola
+ * \param mensaje Mensaje que se muestra para solicitar la cadena
+ * \return Cadena ingresada por el usuario
+ */
 std::string obtenerCadena(const std::string& mensaje) {
     std::string valor;
     std::cout << mensaje;
@@ -84,6 +108,12 @@ std::string obtenerCadena(const std::string& mensaje) {
     return valor;
 }
 
+/** 
+ * \brief Realiza una prueba de rendimiento insertando y buscando elementos
+ * \tparam K Tipo de clave usado en la tabla hash
+ * \tparam V Tipo de valor usado en la tabla hash
+ * \param tabla Referencia a la tabla hash a evaluar
+ */
 template <typename K, typename V>
 void pruebaRendimiento(TablaHash<K, V>& tabla) {
     std::cout << "\n=== PRUEBA DE RENDIMIENTO ===\n";
@@ -127,6 +157,10 @@ void pruebaRendimiento(TablaHash<K, V>& tabla) {
     tabla.mostrarEstadisticas();
 }
 
+/** 
+ * \brief Función principal que controla el flujo del programa
+ * \return Código de salida (0 para éxito)
+ */
 int main() {
     TablaHash<int, std::string> tabla(50, 0.7f, 0.3f, DOBLE_HASH);
 
