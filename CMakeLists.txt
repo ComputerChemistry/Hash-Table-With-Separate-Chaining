@@ -10,6 +10,7 @@ add_executable(Hash_Table_With_Separate_Chaining
         Cabeceras/xxh64.hpp
         Cabeceras/TablaHash.hpp
         Cabeceras/TablaHash.hpp
+        Cabeceras/Hasher.hpp
 )
 
 target_include_directories(Hash_Table_With_Separate_Chaining PUBLIC
