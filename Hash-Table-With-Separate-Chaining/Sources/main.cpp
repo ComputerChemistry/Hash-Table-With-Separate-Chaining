@@ -277,6 +277,6 @@ int main() {
         }
     }
 
-    std::cout << "Gracias por usar la demo de TablaHash.\n";
+    std::cout << "Gracias por usar la TablaHash.\n";
     return 0;
 }
