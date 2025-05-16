@@ -1,0 +1,24 @@
+[33mba8380d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mwip-reventada[m[33m)[m WIP: integración violenta de iteradores, tabla hash llorando sangre
+[33m1e2e1cd[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Update main.cpp
+[33m4545169[m Merge pull request #1 from ComputerChemistry/ElMike01-patch-1
+[33mdff6070[m Merge pull request #2 from ComputerChemistry/ElMike01-patch-2
+[33m1199911[m Merge pull request #3 from ComputerChemistry/ElMike01-patch-3
+[33m8e6e52e[m Merge pull request #4 from ComputerChemistry/ElMike01-patch-4
+[33m1e2287e[m[33m ([m[1;31morigin/ElMike01-patch-4[m[33m)[m Update TablaHash.tpp
+[33ma761aa6[m[33m ([m[1;31morigin/ElMike01-patch-3[m[33m)[m Update TablaHash.hpp
+[33m6a65f26[m[33m ([m[1;31morigin/ElMike01-patch-2[m[33m)[m Update TablaHash.cpp
+[33me5f2169[m[33m ([m[1;31morigin/ElMike01-patch-1[m[33m)[m Update main.cpp
+[33m2b6b922[m Update TablaHash.tpp
+[33md3bbe9a[m Create README.md
+[33m6149a05[m Update TablaHash.tpp
+[33m792dfe9[m Update TablaHash.hpp
+[33m301c135[m Update main.cpp
+[33m90e2050[m Update TablaHash.tpp
+[33m162de7d[m Update TablaHash.cpp
+[33m2bb461f[m Carpeta de Templates agregadas
+[33mca44166[m Directorio build eliminado
+[33m78d677a[m gitignore agregado
+[33mf671093[m Nueva Estructura Agregada
+[33m0a868f7[m Restructuracion del Proyecto
+[33m11c9903[m Add files via upload
+[33m3418933[m Initial commit
