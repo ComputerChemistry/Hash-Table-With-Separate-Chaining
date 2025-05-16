@@ -8,172 +8,227 @@
  * Las declaraciones de estos métodos se encuentran en "Cabeceras/TablaHash.hpp".
  */
 
-#include "../Cabeceras/TablaHash.hpp" // Declaraciones de la plantilla TablaHash
-#include <cstdint>                   // Para uint64_t
-#include <stdexcept>                 // Para std::invalid_argument
-#include <iostream>                  // Para std::cout en MostrarTabla
+#include "../Cabeceras/TablaHash.hpp"
+#include <cstdint>
+#include <stdexcept>
+#include <iostream>
 
-// Implementación del Constructor
+/**
+ * @brief Constructor de la tabla hash.
+ * @tparam Clave Tipo de la clave.
+ * @tparam Valor Tipo del valor.
+ * @tparam Hash Functor para calcular el hash de las claves.
+ * @param capacidad_Inicial Capacidad inicial con la que se creará la tabla hash.
+ * @throw std::invalid_argument Si `capacidad_Inicial` es 0.
+ */
 template<typename Clave, typename Valor, typename Hash>
 TablaHash<Clave, Valor, Hash>::TablaHash(size_t capacidad_Inicial)
     : tam_Tabla(capacidad_Inicial), num_Elementos(0), cubos(nullptr), funcionHash() {
     if (tam_Tabla == 0) {
-        // Lanzar excepción si la capacidad inicial es inválida.
         throw std::invalid_argument("La capacidad de la tabla no puede ser 0.");
     }
-    // Intentar asignar memoria para el array de cubetas.
-    // std::bad_alloc se lanzará aquí si la asignación falla.
+
     cubos = new TablaHashNodo<Clave, Valor> *[tam_Tabla];
-    // Inicializar todas las cubetas a nullptr.
+
     for (size_t i = 0; i < tam_Tabla; i++) {
         cubos[i] = nullptr;
     }
 }
 
-// Implementación del Destructor
+/**
+ * @brief Destructor de la tabla hash.
+ * @tparam Clave Tipo de la clave.
+ * @tparam Valor Tipo del valor.
+ * @tparam Hash Functor para calcular el hash de las claves.
+ * @note Libera toda la memoria dinámica utilizada por los nodos y la tabla de cubetas.
+ */
 template<typename Clave, typename Valor, typename Hash>
 TablaHash<Clave, Valor, Hash>::~TablaHash() {
-    // Recorrer cada cubeta.
     for (size_t i = 0; i < tam_Tabla; i++) {
         TablaHashNodo<Clave, Valor> *actual = cubos[i];
-        // Eliminar todos los nodos en la lista enlazada de la cubeta actual.
+
         while (actual != nullptr) {
             TablaHashNodo<Clave, Valor> *nodo_a_eliminar = actual;
             actual = actual->siguiente;
             delete nodo_a_eliminar;
         }
-        cubos[i] = nullptr; // Asegurar que el puntero de la cubeta quede nulo.
+        cubos[i] = nullptr;
     }
-    // Eliminar el array de cubetas.
+
     delete[] cubos;
 }
 
-// Implementación de obtenerIndice
+/**
+ * @brief Calcula el índice en la tabla para una clave dada.
+ * @tparam Clave Tipo de la clave.
+ * @tparam Valor Tipo del valor.
+ * @tparam Hash Functor para calcular el hash de las claves.
+ * @param clave La clave para la cual calcular el índice.
+ * @return size_t El índice calculado para la clave.
+ * @throw std::logic_error Si la capacidad de la tabla (`tam_Tabla`) es 0.
+ */
 template<typename Clave, typename Valor, typename Hash>
 size_t TablaHash<Clave, Valor, Hash>::obtenerIndice(const Clave &clave) const {
-    // Calcular el hash usando el functor proporcionado.
     uint64_t valor_hash = funcionHash(clave);
     if (tam_Tabla == 0) {
-        // Esto no debería ocurrir si el constructor valida la capacidad,
-        // pero es una buena salvaguarda.
         throw std::logic_error("La capacidad de la tabla es 0 en obtenerIndice, lo cual no debería ser posible.");
     }
-    // Convertir el hash a un índice dentro del rango de la tabla.
+
     size_t indice = valor_hash % tam_Tabla;
     return indice;
 }
 
-// Implementación de Insertar
+/**
+ * @brief Inserta un par clave-valor en la tabla hash.
+ * @details Si la clave ya existe, actualiza su valor. Si el factor de carga
+ *          supera un umbral predefinido (0.75), se redimensiona la tabla.
+ * @tparam Clave Tipo de la clave.
+ * @tparam Valor Tipo del valor.
+ * @tparam Hash Functor para calcular el hash de las claves.
+ * @param clave La clave del elemento a insertar.
+ * @param valor El valor asociado a la clave.
+ * @return bool `true` si el elemento fue insertado como nuevo, `false` si la clave
+ *         ya existía y su valor fue actualizado.
+ */
 template<typename Clave, typename Valor, typename Hash>
 bool TablaHash<Clave, Valor, Hash>::Insertar(const Clave &clave, const Valor &valor) {
-    // obtenerIndice puede lanzar std::invalid_argument si tam_Tabla es 0 (aunque protegido por constructor).
+    const double FACTOR_CARGA_MAXIMO_REHASH = 0.75;
+
     size_t indice = obtenerIndice(clave);
     TablaHashNodo<Clave, Valor> *actual = cubos[indice];
 
-    // Buscar si la clave ya existe en la cubeta.
+
     while (actual != nullptr) {
         if (actual->clave == clave) {
-            actual->valor = valor; // Actualizar valor si la clave existe.
-            return false;          // Indicar que se actualizó, no se insertó nuevo.
+            actual->valor = valor; // Actualiza el valor si la clave ya existe
+            return false; // Indica que la clave ya existía
         }
         actual = actual->siguiente;
     }
 
-    // Si la clave no existe, crear un nuevo nodo e insertarlo al principio de la lista.
-    // std::bad_alloc se lanzará aquí si la asignación de nuevo_nodo falla.
+    // La clave no existe, insertar nuevo nodo al principio de la lista enlazada
     TablaHashNodo<Clave, Valor> *nuevo_nodo = new TablaHashNodo<Clave, Valor>(clave, valor);
     nuevo_nodo->siguiente = cubos[indice];
     cubos[indice] = nuevo_nodo;
     num_Elementos++;
-    return true; // Indicar que se insertó un nuevo elemento.
+
+    // Comprobar si es necesario redimensionar
+    if (tam_Tabla > 0 && (static_cast<double>(num_Elementos) / tam_Tabla > FACTOR_CARGA_MAXIMO_REHASH)) {
+        Redimensionar();
+    }
+
+    return true; // Indica que se insertó un nuevo elemento
 }
 
-// Implementación de Buscar
+/**
+ * @brief Busca un elemento por su clave en la tabla hash.
+ * @tparam Clave Tipo de la clave.
+ * @tparam Valor Tipo del valor.
+ * @tparam Hash Functor para calcular el hash de las claves.
+ * @param clave La clave del elemento a buscar.
+ * @param valor_encontrado Referencia donde se almacenará el valor si la clave es encontrada.
+ * @return bool `true` si la clave fue encontrada y `valor_encontrado` ha sido actualizado,
+ *         `false` en caso contrario.
+ */
 template<typename Clave, typename Valor, typename Hash>
 bool TablaHash<Clave, Valor, Hash>::Buscar(const Clave &clave, Valor &valor_encontrado) const {
-    // obtenerIndice puede lanzar std::invalid_argument si tam_Tabla es 0.
     size_t indice = obtenerIndice(clave);
     TablaHashNodo<Clave, Valor> *actual = cubos[indice];
 
-    // Recorrer la lista enlazada de la cubeta.
+
     while (actual != nullptr) {
         if (actual->clave == clave) {
-            valor_encontrado = actual->valor; // Clave encontrada, copiar valor.
+            valor_encontrado = actual->valor;
             return true;
         }
         actual = actual->siguiente;
     }
-    return false; // Clave no encontrada.
+    return false; // Clave no encontrada
 }
 
-// Implementación de Eliminar
+/**
+ * @brief Elimina un elemento de la tabla hash por su clave.
+ * @tparam Clave Tipo de la clave.
+ * @tparam Valor Tipo del valor.
+ * @tparam Hash Functor para calcular el hash de las claves.
+ * @param clave La clave del elemento a eliminar.
+ * @return bool `true` si el elemento fue encontrado y eliminado, `false` si la clave no existía.
+ */
 template<typename Clave, typename Valor, typename Hash>
 bool TablaHash<Clave, Valor, Hash>::Eliminar(const Clave &clave) {
-    // obtenerIndice puede lanzar std::invalid_argument si tam_Tabla es 0.
     size_t indice = obtenerIndice(clave);
     TablaHashNodo<Clave, Valor> *actual = cubos[indice];
     TablaHashNodo<Clave, Valor> *anterior = nullptr;
 
-    // Recorrer la lista enlazada de la cubeta.
+
     while (actual != nullptr) {
         if (actual->clave == clave) {
-            // Clave encontrada, proceder a eliminar el nodo.
             if (anterior == nullptr) {
-                // El nodo a eliminar es el primero de la lista.
+                // El nodo a eliminar es el primero en la lista
                 cubos[indice] = actual->siguiente;
             } else {
-                // El nodo a eliminar está en medio o al final de la lista.
+                // El nodo a eliminar está en medio o al final de la lista
                 anterior->siguiente = actual->siguiente;
             }
             delete actual;
             num_Elementos--;
-            return true; // Elemento eliminado.
+            return true; // Elemento encontrado y eliminado
         }
         anterior = actual;
         actual = actual->siguiente;
     }
-    return false; // Clave no encontrada, nada que eliminar.
+    return false; // Clave no encontrada
 }
 
-// Implementación de MostrarTabla
+/**
+ * @brief Muestra el contenido y estado actual de la tabla hash en la consola.
+ * @details Imprime la capacidad, número de elementos, factor de carga, y el contenido
+ *          de cada cubeta, incluyendo las claves, valores, y sus hashes.
+ *          También indica si el índice esperado de un elemento coincide con su cubeta actual.
+ * @tparam Clave Tipo de la clave.
+ * @tparam Valor Tipo del valor.
+ * @tparam Hash Functor para calcular el hash de las claves.
+ * @note Esta función es principalmente para depuración y visualización.
+ */
 template<typename Clave, typename Valor, typename Hash>
 void TablaHash<Clave, Valor, Hash>::MostrarTabla() const {
     std::cout << "\n--- Detalles de la Tabla Hash ---" << std::endl;
     std::cout << "Capacidad: " << this->tam_Tabla
-              << ", Elementos: " << this->num_Elementos
-              << std::endl;
+            << ", Elementos: " << this->num_Elementos
+            << std::endl;
 
-    // Calcular y mostrar el factor de carga.
     if (this->tam_Tabla > 0) {
         std::cout << "Factor de Carga: "
-                  << static_cast<double>(this->num_Elementos) / this->tam_Tabla
-                  << std::endl;
+                << static_cast<double>(this->num_Elementos) / this->tam_Tabla
+                << std::endl;
     } else {
         std::cout << "Factor de Carga: N/A (capacidad es 0)" << std::endl;
     }
     std::cout << "----------------------------------------------------------" << std::endl;
 
-    // Recorrer cada cubeta e imprimir su contenido.
     for (size_t i = 0; i < this->tam_Tabla; ++i) {
         std::cout << "Cubeta [" << i << "]:";
-        TablaHashNodo<Clave, Valor>* actual = this->cubos[i];
+        TablaHashNodo<Clave, Valor> *actual = this->cubos[i];
         if (actual == nullptr) {
             std::cout << " [VACIA]" << std::endl;
         } else {
-            std::cout << std::endl; // Nueva línea para los elementos de la cubeta.
+            std::cout << std::endl;
             while (actual != nullptr) {
-                // Calcular hash para mostrar (con semilla 0 por consistencia).
-                uint64_t hashValor = this->funcionHash(actual->clave, 0);
+                // Asumiendo que funcionHash puede tomar un segundo argumento opcional (seed)
+                // o que existe una sobrecarga. Si no, ajustar esta línea.
+                // Para el propósito de MostrarTabla, un hash consistente es suficiente.
+                // Si funcionHash es std::hash, no toma un segundo argumento.
+                // En este caso, usaremos funcionHash(actual->clave) directamente.
+                uint64_t hashValor = this->funcionHash(actual->clave);
                 std::cout << "  -> Clave: \"" << actual->clave << "\""
-                          << ", Valor: " << actual->valor
-                          << ", Hash (seed 0): " << hashValor
-                          << ", Indice Esperado (Hash % Capacidad): " 
-                          << (this->tam_Tabla > 0 ? (hashValor % this->tam_Tabla) : 0);
+                        << ", Valor: " << actual->valor
+                        << ", Hash: " << hashValor // Simplificado para generalidad
+                        << ", Indice Esperado (Hash % Capacidad): "
+                        << (this->tam_Tabla > 0 ? (hashValor % this->tam_Tabla) : 0);
 
-                // Comprobar si el índice esperado coincide con el actual.
                 if (this->tam_Tabla > 0 && (hashValor % this->tam_Tabla) != i) {
                     std::cout << " [ALERTA: Indice no coincide!]";
-                } else if (this->tam_Tabla == 0 && i != 0) { // Caso extremo, tam_Tabla es 0.
+                } else if (this->tam_Tabla == 0 && i != 0) {
                     std::cout << " [ALERTA: Capacidad es 0, índice no aplicable]";
                 }
                 std::cout << std::endl;
@@ -182,4 +237,83 @@ void TablaHash<Clave, Valor, Hash>::MostrarTabla() const {
         }
     }
     std::cout << "----------------------------------------------------------" << std::endl;
+}
+
+/**
+ * @brief Redimensiona la tabla hash, generalmente duplicando su capacidad.
+ * @details Esta operación se activa cuando el factor de carga excede un umbral.
+ *          Crea una nueva tabla con mayor capacidad, y todos los elementos existentes
+ *          son reinsertados en la nueva tabla de acuerdo a sus nuevos índices hash.
+ *          La tabla anterior es luego eliminada.
+ * @tparam Clave Tipo de la clave.
+ * @tparam Valor Tipo del valor.
+ * @tparam Hash Functor para calcular el hash de las claves.
+ * @note Esta es una operación costosa ya que implica rehashear y mover todos los elementos.
+ */
+template<typename Clave, typename Valor, typename Hash>
+void TablaHash<Clave, Valor, Hash>::Redimensionar() {
+    size_t capacidad_Anterior = this->tam_Tabla;
+    TablaHashNodo<Clave, Valor> **cubos_Anteriores = this->cubos;
+
+    // Duplica la capacidad. Si la capacidad anterior era 0, la establece a un valor por defecto (ej. 10).
+    this->tam_Tabla = (capacidad_Anterior == 0) ? 10 : capacidad_Anterior * 2;
+
+    std::cout << "\n*** REDIMENSIONANDO TABLA HASH ***" << std::endl;
+    std::cout << "    Capacidad Antigua: " << capacidad_Anterior << ", Nueva Capacidad: " << this->tam_Tabla <<
+            std::endl;
+
+    this->cubos = new TablaHashNodo<Clave, Valor> *[this->tam_Tabla];
+    for (size_t i = 0; i < this->tam_Tabla; ++i) {
+        this->cubos[i] = nullptr;
+    }
+    this->num_Elementos = 0; // Se reseteará al reinsertar los elementos
+
+    std::cout << "    Redimensionar: num_Elementos reseteado a 0. Empezando reinsercion." << std::endl;
+
+    // Reinsertar todos los elementos de la tabla vieja a la nueva
+    for (size_t i = 0; i < capacidad_Anterior; ++i) {
+        TablaHashNodo<Clave, Valor> *actual_viejo = cubos_Anteriores[i];
+        while (actual_viejo != nullptr) {
+            // Insertar usará la nueva tam_Tabla y la misma funcionHash
+            this->Insertar(actual_viejo->clave, actual_viejo->valor);
+            actual_viejo = actual_viejo->siguiente;
+        }
+    }
+    std::cout << "    Redimensionar: Reinsercion finalizada. num_Elementos final dentro de Redimensionar: " << this->
+            num_Elementos << std::endl;
+
+    // Eliminar la tabla vieja
+    for (size_t i = 0; i < capacidad_Anterior; ++i) {
+        TablaHashNodo<Clave, Valor> *actual_a_borrar = cubos_Anteriores[i];
+        while (actual_a_borrar != nullptr) {
+            TablaHashNodo<Clave, Valor> *siguiente_a_borrar = actual_a_borrar->siguiente;
+            delete actual_a_borrar;
+            actual_a_borrar = siguiente_a_borrar;
+        }
+    }
+    delete[] cubos_Anteriores;
+
+    std::cout << "*** REDIMENSIONAMIENTO COMPLETO. Elementos FINALES: " << this->num_Elementos << " ***" << std::endl;
+}
+
+/**
+ * @brief Elimina todos los elementos de la tabla hash.
+ * @details Libera la memoria de todos los nodos almacenados y resetea el número
+ *          de elementos a cero. La capacidad de la tabla permanece sin cambios.
+ * @tparam Clave Tipo de la clave.
+ * @tparam Valor Tipo del valor.
+ * @tparam Hash Functor para calcular el hash de las claves.
+ */
+template<typename Clave, typename Valor, typename Hash>
+void TablaHash<Clave, Valor, Hash>::Vaciar() {
+    for (size_t i = 0; i < this->tam_Tabla; ++i) {
+        TablaHashNodo<Clave, Valor> *actual = this->cubos[i];
+        while (actual != nullptr) {
+            TablaHashNodo<Clave, Valor> *nodo_a_eliminar = actual;
+            actual = actual->siguiente;
+            delete nodo_a_eliminar;
+        }
+        this->cubos[i] = nullptr; // Importante: resetear el puntero de la cubeta
+    }
+    this->num_Elementos = 0;
 }

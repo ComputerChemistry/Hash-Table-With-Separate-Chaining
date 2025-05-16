@@ -1,226 +1,409 @@
-/**
- * @file main.cpp
- * @brief Archivo principal que contiene pruebas para las clases Hasher y TablaHash.
- *
- * Este archivo implementa una serie de pruebas para verificar la correcta funcionalidad
- * de las funciones hash para strings y enteros, así como las operaciones CRUD (Crear, Leer, Actualizar, Eliminar)
- * de la TablaHash, incluyendo el manejo de colisiones.
- */
-
 #include <iostream>
 #include <string>
-#include <vector>
-#include "Cabeceras/xxh64.hpp"     // Asumo que estas rutas son correctas desde main.cpp
-#include "Cabeceras/Hasher.hpp"    // o que tu configuración de includes lo maneja.
+#include <limits>
+
+#include "Cabeceras/Hasher.hpp"
 #include "Cabeceras/TablaHash.hpp"
 
-/**
- * @brief Función principal que ejecuta las pruebas de la Tabla Hash y las funciones Hasher.
- * @return 0 si todas las pruebas se ejecutan correctamente.
- */
+
+void probarHashers();
+
+void probarMiTabla_InsercionRehashBusquedaEliminacion();
+
+void probarTablaNumerica_ColisionesAgresivas();
+
+void probarMetodosUtilitarios();
+
+void modoInteractivo();
+
+
+void mostrarMenuPrincipal() {
+    std::cout << "\n\n===== MENU DE PRUEBAS TABLA HASH =====" << std::endl;
+    std::cout << "1. Probar Funciones Hash (HasherString64, HasherInt64)" << std::endl;
+    std::cout << "2. Pruebas Basicas y Redimensionamiento (miTabla - string,int)" << std::endl;
+    std::cout << "3. Pruebas Agresivas de Colision/Rehash (tablaNumerica - int,double)" << std::endl;
+    std::cout << "4. Probar Metodos Utilitarios (EstaVacia, Vaciar, FactorCarga)" << std::endl;
+    std::cout << "5. MODO INTERACTIVO" << std::endl;
+    std::cout << "6. Ejecutar TODAS las pruebas automatizadas" << std::endl;
+    std::cout << "0. Salir" << std::endl;
+    std::cout << "Seleccione una opcion: ";
+}
+
+void esperarEnter() {
+    std::cout << "\nPresione Enter para continuar...";
+    std::cin.get();
+}
+
+void limpiarConsola() {
+    std::system("cls");
+}
+
+
+std::string obtenerLinea(const std::string &prompt) {
+    std::string linea;
+    std::cout << prompt;
+    std::getline(std::cin, linea);
+    return linea;
+}
+
+void mostrarSubMenuInteractivo() {
+    std::cout << "\n--- Modo Interactivo ---" << std::endl;
+    std::cout << "1. Insertar elemento (clave: string, valor: string)" << std::endl;
+    std::cout << "2. Buscar elemento (por clave string)" << std::endl;
+    std::cout << "3. Eliminar elemento (por clave string)" << std::endl;
+    std::cout << "4. Mostrar tabla actual" << std::endl;
+    std::cout << "5. Vaciar tabla actual" << std::endl;
+    std::cout << "0. Volver al menu principal" << std::endl;
+    std::cout << "Seleccione una opcion: ";
+}
+
+
+void modoInteractivo() {
+    TablaHash<std::string, std::string, HasherString64> tablaInteractiva(5);
+    int opcionSubMenu;
+    std::string claveEntrada;
+    std::string valorEntrada;
+    std::string valorEncontrado;
+    bool resultadoOperacion;
+
+    std::cout << "--- INICIO: Modo Interactivo ---" << std::endl;
+    std::cout << "Se ha creado una TablaHash<string, string> vacia." << std::endl;
+
+    do {
+        limpiarConsola();
+        std::cout << "Estado Actual de la Tabla Interactiva:" << std::endl;
+        tablaInteractiva.MostrarTabla();
+        mostrarSubMenuInteractivo();
+
+        std::cin >> opcionSubMenu;
+        while (std::cin.fail()) {
+            std::cout << "Entrada invalida. Por favor, ingrese un numero." << std::endl;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Seleccione una opcion: ";
+            std::cin >> opcionSubMenu;
+        }
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        switch (opcionSubMenu) {
+            case 1:
+                claveEntrada = obtenerLinea("Ingrese la clave (string): ");
+                valorEntrada = obtenerLinea("Ingrese el valor (string): ");
+                resultadoOperacion = tablaInteractiva.Insertar(claveEntrada, valorEntrada);
+                if (resultadoOperacion) {
+                    std::cout << "Elemento (\"" << claveEntrada << "\", \"" << valorEntrada <<
+                            "\") insertado exitosamente." << std::endl;
+                } else {
+                    std::cout << "Clave \"" << claveEntrada << "\" ya existia. Valor actualizado a \"" << valorEntrada
+                            << "\"." << std::endl;
+                }
+                break;
+            case 2:
+                claveEntrada = obtenerLinea("Ingrese la clave a buscar: ");
+                resultadoOperacion = tablaInteractiva.Buscar(claveEntrada, valorEncontrado);
+                if (resultadoOperacion) {
+                    std::cout << "Clave \"" << claveEntrada << "\" encontrada. Valor: \"" << valorEncontrado << "\"." <<
+                            std::endl;
+                } else {
+                    std::cout << "Clave \"" << claveEntrada << "\" no encontrada." << std::endl;
+                }
+                break;
+            case 3:
+                claveEntrada = obtenerLinea("Ingrese la clave a eliminar: ");
+                resultadoOperacion = tablaInteractiva.Eliminar(claveEntrada);
+                if (resultadoOperacion) {
+                    std::cout << "Clave \"" << claveEntrada << "\" eliminada exitosamente." << std::endl;
+                } else {
+                    std::cout << "Clave \"" << claveEntrada << "\" no encontrada, no se pudo eliminar." << std::endl;
+                }
+                break;
+            case 4:
+                std::cout << "La tabla se muestra al inicio de cada ciclo del sub-menu." << std::endl;
+                break;
+            case 5:
+                tablaInteractiva.Vaciar();
+                std::cout << "Tabla interactiva vaciada." << std::endl;
+                break;
+            case 0:
+                std::cout << "Volviendo al menu principal..." << std::endl;
+                break;
+            default:
+                std::cout << "Opcion no valida. Intente de nuevo." << std::endl;
+                break;
+        }
+        if (opcionSubMenu != 0) {
+            esperarEnter();
+        }
+    } while (opcionSubMenu != 0);
+    std::cout << "--- FIN: Modo Interactivo ---" << std::endl;
+}
+
+
 int main() {
-    // Pruebas de Hasher (como las tenías)
-    std::cout << "Probando funciones Hash" << std::endl;
-    std::cout << std::endl;
+    int opcion;
+    do {
+        limpiarConsola();
+        mostrarMenuPrincipal();
+        std::cin >> opcion;
+
+        while (std::cin.fail()) {
+            std::cout << "Entrada invalida. Por favor, ingrese un numero." << std::endl;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Seleccione una opcion: ";
+            std::cin >> opcion;
+        }
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        limpiarConsola();
+
+        switch (opcion) {
+            case 1:
+                probarHashers();
+                break;
+            case 2:
+                probarMiTabla_InsercionRehashBusquedaEliminacion();
+                break;
+            case 3:
+                probarTablaNumerica_ColisionesAgresivas();
+                break;
+            case 4:
+                probarMetodosUtilitarios();
+                break;
+            case 5:
+                modoInteractivo();
+                break;
+            case 6:
+                std::cout << "--- Ejecutando TODAS las pruebas automatizadas ---" << std::endl;
+                probarHashers();
+                esperarEnter();
+                limpiarConsola();
+                probarMiTabla_InsercionRehashBusquedaEliminacion();
+                esperarEnter();
+                limpiarConsola();
+                probarTablaNumerica_ColisionesAgresivas();
+                esperarEnter();
+                limpiarConsola();
+                probarMetodosUtilitarios();
+                std::cout << "\n--- TODAS las pruebas automatizadas finalizadas ---" << std::endl;
+                break;
+            case 0:
+                std::cout << "Saliendo del programa de pruebas." << std::endl;
+                break;
+            default:
+                std::cout << "Opcion no valida. Intente de nuevo." << std::endl;
+                break;
+        }
+
+        if (opcion != 0) {
+            esperarEnter();
+        }
+    } while (opcion != 0);
+
+    return 0;
+}
+
+
+void probarHashers() {
+    std::cout << "--- INICIO: Pruebas de Funciones Hash ---" << std::endl;
     HasherString64 stringHasher;
-    std::vector<std::string> stringsPrueba = {
-        "hola", "mundo", "ballena", "hashing", "", "IreneGOD",
+    const char *stringsPruebaArr[] = {
+        "hola", "mundo", "ballena", "hashing", "", "Irene la Mejor Profe"
     };
+    size_t numStrings = sizeof(stringsPruebaArr) / sizeof(stringsPruebaArr[0]);
     std::cout << "\nProbando HasherString64" << std::endl;
-    for (const std::string &str: stringsPrueba) {
-        uint64_t hashValor = stringHasher(str);
-        uint64_t hashValorConSemilla = stringHasher(str, 031001); // Semilla octal 031001 = decimal 12801
-        std::cout << "Clave: \"" << str << "\"" << std::endl;
+    for (size_t i = 0; i < numStrings; ++i) {
+        uint64_t hashValor = stringHasher(stringsPruebaArr[i]);
+        uint64_t hashValorConSemilla = stringHasher(stringsPruebaArr[i], 031001);
+        std::cout << "Clave: \"" << stringsPruebaArr[i] << "\"" << std::endl;
         std::cout << " Hash (seed = 0): " << hashValor << std::endl;
         std::cout << " Hash (seed = " << 031001 << "): " << hashValorConSemilla << std::endl;
     }
     HasherInt64 intHasher;
-    std::vector<int> intsPrueba = {
+    int intsPruebaArr[] = {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
     };
+    size_t numInts = sizeof(intsPruebaArr) / sizeof(intsPruebaArr[0]);
     std::cout << "\nProbando HasherInt64" << std::endl;
-    for (int num: intsPrueba) {
+    for (size_t i = 0; i < numInts; ++i) {
+        int num = intsPruebaArr[i];
         uint64_t hashValor = intHasher(num);
         uint64_t hashValorConSemilla = intHasher(num, 031001);
         std::cout << "Clave: \"" << num << "\"" << std::endl;
         std::cout << " Hash (seed = 0): " << hashValor << std::endl;
         std::cout << " Hash (seed = " << 031001 << "): " << hashValorConSemilla << std::endl;
     }
+    std::cout << "--- FIN: Pruebas de Funciones Hash ---" << std::endl;
+}
 
-    std::cout << "\n/---------------------------------------------/" << std::endl;
-    std::cout << "\n Probando getters" << std::endl;
-    TablaHash<std::string, int, HasherString64> miTabla(10); // Reducí capacidad para ver colisiones más fácil
+void probarMiTabla_InsercionRehashBusquedaEliminacion() {
+    std::cout << "--- INICIO: Pruebas Basicas y Redimensionamiento (miTabla - string,int) ---" << std::endl;
+    std::cout << "\n Probando getters y estado inicial de miTabla" << std::endl;
+    TablaHash<std::string, int, HasherString64> miTabla(4);
     std::cout << "\nInstancia de TablaHash::<std::string, int> creada (miTabla)." << std::endl;
-    std::cout << "Capacidad inicial: 10, Capacidad obtenida: " << miTabla.ObtenerCapacidad() << std::endl;
+    std::cout << "Capacidad inicial: 4, Capacidad obtenida: " << miTabla.ObtenerCapacidad() << std::endl;
     std::cout << "Numero de elementos inicial: 0, Numero de elementos obtenidos: " << miTabla.ObtenerNumElementos() <<
             std::endl;
-    std::cout << "\n === ESTADO INICIAL DE miTabla ===" << std::endl;
     miTabla.MostrarTabla();
 
-
-    std::cout << "\n/---------------------------------------------/" << std::endl;
-    std::cout << "\n Probando Insertar" << std::endl;
+    std::cout << "\n Probando Insertar en miTabla (con posible rehash)" << std::endl;
     bool resultadoOperacion;
+    const char *miTablaClaves[] = {"hola", "mundo", "adios", "prueba", "hello", "otra", "mas"};
+    int miTablaValores[] = {100, 200, 300, 400, 500, 600, 700};
+    size_t numMiTablaInserciones = sizeof(miTablaClaves) / sizeof(miTablaClaves[0]);
 
-    resultadoOperacion = miTabla.Insertar("hola", 100);
-    std::cout << "\nInsertando (\"hola\",100): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") <<
-            ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
-    resultadoOperacion = miTabla.Insertar("mundo", 200);
-    std::cout << "Insertando (\"mundo\", 200): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") <<
-            ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
-    resultadoOperacion = miTabla.Insertar("adios", 300);
-    std::cout << "Insertando (\"adios\", 300): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") <<
-            ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
-    resultadoOperacion = miTabla.Insertar("prueba", 400); // Otro elemento
-    std::cout << "Insertando (\"prueba\", 400): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") <<
-            ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
-    resultadoOperacion = miTabla.Insertar("hello", 500); // Y otro más para forzar posibles colisiones con capacidad 10
-    std::cout << "Insertando (\"hello\", 500): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") <<
-            ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
-            
-    std::cout << "\n === ESTADO DE miTabla DESPUES DE VARIAS INSERCIONES ===" << std::endl;
+    for (size_t i = 0; i < numMiTablaInserciones; ++i) {
+        resultadoOperacion = miTabla.Insertar(miTablaClaves[i], miTablaValores[i]);
+        std::cout << "Insertando (\"" << miTablaClaves[i] << "\"," << miTablaValores[i] << "): "
+                << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)")
+                << ". Elementos: " << miTabla.ObtenerNumElementos()
+                << ". Capacidad: " << miTabla.ObtenerCapacidad() << std::endl;
+    }
+    std::cout << "\n === ESTADO DE miTabla DESPUES DE INSERCIONES Y POSIBLES REHASHES ===" << std::endl;
     miTabla.MostrarTabla();
 
-    resultadoOperacion = miTabla.Insertar("hola", 101); // Actualizando "hola"
+    resultadoOperacion = miTabla.Insertar("hola", 101);
     std::cout << "\nInsertando (\"hola\", 101) de nuevo: " << (resultadoOperacion
-                                                                 ? "Exito (nuevo)"
-                                                                 : "Fallo (ya existe/actualizado)") << ". Elementos: "
-            << miTabla.ObtenerNumElementos() << std::endl;
-            
+                                                                   ? "Exito (nuevo)"
+                                                                   : "Fallo (ya existe/actualizado)")
+            << ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
     std::cout << "\n === ESTADO DE miTabla DESPUES DE ACTUALIZAR 'hola' ===" << std::endl;
     miTabla.MostrarTabla();
 
-
-    std::cout << "\n/---------------------------------------------/" << std::endl;
     std::cout << "\n Probando Buscar en miTabla (antes de eliminar)" << std::endl;
     int valorEncontradoInt;
-
     resultadoOperacion = miTabla.Buscar("hola", valorEncontradoInt);
     std::cout << "Buscando \"hola\": " << (resultadoOperacion ? "Encontrado" : "No encontrado") << (resultadoOperacion
-        ? ", Valor: " + std::to_string(valorEncontradoInt)
-        : "") << std::endl;
+            ? ", Valor: " + std::to_string(valorEncontradoInt)
+            : "") << std::endl;
     resultadoOperacion = miTabla.Buscar("mundo", valorEncontradoInt);
     std::cout << "Buscando \"mundo\": " << (resultadoOperacion ? "Encontrado" : "No encontrado") << (resultadoOperacion
-        ? ", Valor: " + std::to_string(valorEncontradoInt)
-        : "") << std::endl;
+            ? ", Valor: " + std::to_string(valorEncontradoInt)
+            : "") << std::endl;
     resultadoOperacion = miTabla.Buscar("adios", valorEncontradoInt);
     std::cout << "Buscando \"adios\": " << (resultadoOperacion ? "Encontrado" : "No encontrado") << (resultadoOperacion
-        ? ", Valor: " + std::to_string(valorEncontradoInt)
-        : "") << std::endl;
+            ? ", Valor: " + std::to_string(valorEncontradoInt)
+            : "") << std::endl;
     resultadoOperacion = miTabla.Buscar("inexistente", valorEncontradoInt);
     std::cout << "Buscando \"inexistente\": " << (resultadoOperacion ? "Encontrado" : "No encontrado") << std::endl;
-    
 
-    std::cout << "\n/---------------------------------------------/" << std::endl;
-    std::cout << "\n Probando Eliminar en miTabla" << std::endl;
-    // Estado actual de miTabla: {"hola":101, "mundo":200, "adios":300, "prueba":400, "hello":500}, num_Elementos = 5
-
-    resultadoOperacion = miTabla.Eliminar("fantasma");
-    std::cout << "Eliminando \"fantasma\": " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-            << ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
-
-    resultadoOperacion = miTabla.Eliminar("mundo");
-    std::cout << "Eliminando \"mundo\": " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-            << ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
-    std::cout << "\n === ESTADO DE miTabla DESPUES DE ELIMINAR 'mundo' ===" << std::endl;
+    std::cout << "\n Probando Eliminar de miTabla" << std::endl;
+    miTabla.Eliminar("mundo");
+    std::cout << "Eliminado \"mundo\". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
+    miTabla.Eliminar("hola");
+    std::cout << "Eliminado \"hola\". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
+    std::cout << "\n === ESTADO DE miTabla DESPUES DE ALGUNAS ELIMINACIONES ===" << std::endl;
     miTabla.MostrarTabla();
-            
-    resultadoOperacion = miTabla.Buscar("mundo", valorEncontradoInt); 
-    std::cout << "Buscando \"mundo\" post-eliminacion: " << (resultadoOperacion ? "Encontrado" : "No encontrado") <<
-            std::endl; 
+    std::cout << "--- FIN: Pruebas Basicas y Redimensionamiento (miTabla) ---" << std::endl;
+}
 
-    resultadoOperacion = miTabla.Eliminar("hola");
-    std::cout << "Eliminando \"hola\": " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-            << ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl; 
-    std::cout << "\n === ESTADO DE miTabla DESPUES DE ELIMINAR 'hola' ===" << std::endl;
-    miTabla.MostrarTabla();
+void probarTablaNumerica_ColisionesAgresivas() {
+    std::cout << "--- INICIO: Pruebas Agresivas de Colision/Rehash (tablaNumerica - int,double) ---" << std::endl;
+    bool resultadoOperacion;
+    double valorEncontradoDouble;
 
-    resultadoOperacion = miTabla.Eliminar("adios");
-    std::cout << "Eliminando \"adios\": " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-            << ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl; 
-    resultadoOperacion = miTabla.Eliminar("prueba");
-    std::cout << "Eliminando \"prueba\": " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-            << ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl; 
-    resultadoOperacion = miTabla.Eliminar("hello");
-    std::cout << "Eliminando \"hello\": " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-            << ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl; 
-            
-    std::cout << "\n === ESTADO DE miTabla DESPUES DE VACIARLA COMPLETAMENTE ===" << std::endl;
-    miTabla.MostrarTabla();
-
-    resultadoOperacion = miTabla.Eliminar("hola"); // Intentar eliminar de tabla vacía
-    std::cout << "Eliminando \"hola\" (de tabla vacia): " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-            << ". Elementos: " << miTabla.ObtenerNumElementos() << std::endl;
-
-
-    std::cout << "\n--- Pruebas de TablaHash<int, double> ---" << std::endl;
-    TablaHash<int, double, HasherInt64> tablaNumerica(3); // Capacidad muy pequeña para forzar colisiones
-    std::cout << "Tabla numerica creada. Capacidad: " << tablaNumerica.ObtenerCapacidad() << ", Elementos: " <<
-            tablaNumerica.ObtenerNumElementos() << std::endl;
-    std::cout << "\n === ESTADO INICIAL DE tablaNumerica ===" << std::endl;
+    TablaHash<int, double, HasherInt64> tablaNumerica(2);
+    std::cout << "\nEstado inicial tablaNumerica:" << std::endl;
     tablaNumerica.MostrarTabla();
 
-    resultadoOperacion = tablaNumerica.Insertar(10, 3.14);
-    std::cout << "Insertando (10, 3.14): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") <<
-            ". Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    resultadoOperacion = tablaNumerica.Insertar(25, 0.577);
-    std::cout << "Insertando (25, 0.577): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") <<
-            ". Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    resultadoOperacion = tablaNumerica.Insertar(13, 1.0); // Posible colisión con 10 (10%3=1, 13%3=1)
-    std::cout << "Insertando (13, 1.0): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") <<
-            ". Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    
-    // Limpieza de tabla numérica para pruebas de colisión más claras
-    // resultadoOperacion = tablaNumerica.Insertar(2, 2.71); // Posible colisión con 25 (25%3=1, 2%3=2) - No, 25%3=1, 2%3=2. No colisiona aquí.
-                                                        // 10%3 = 1, 13%3 = 1. 25%3=1.
-                                                        // Probemos 10, 13, 1 (todos -> índice 1), y 2 (índice 2), 5 (índice 2)
-    // Vaciado de tabla para prueba específica de colisiones
-    while(tablaNumerica.ObtenerNumElementos() > 0) { // Simple bucle para vaciarla si es necesario
-        if(!tablaNumerica.Eliminar(10)) // Intenta eliminar elementos conocidos, ajusta según lo que hayas insertado
-           if(!tablaNumerica.Eliminar(25))
-              tablaNumerica.Eliminar(13); // Si falla uno, prueba otro. Esto es rudimentario.
+    int clavesParaColision[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    double valorBase = 0.1;
+
+    for (int clave: clavesParaColision) {
+        resultadoOperacion = tablaNumerica.Insertar(clave, clave * valorBase);
+        std::cout << "Insertando (" << clave << ", " << clave * valorBase << "): "
+                << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)")
+                << ". Elementos: " << tablaNumerica.ObtenerNumElementos()
+                << ". Capacidad: " << tablaNumerica.ObtenerCapacidad() << std::endl;
+        if (clave == 2 || clave == 5 || clave == 9) {
+            std::cout << "\n === ESTADO DE tablaNumerica (intermedio) ===" << std::endl;
+            tablaNumerica.MostrarTabla();
+        }
     }
 
-
-    std::cout << "Tabla numerica vaciada para prueba de colision. Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    resultadoOperacion = tablaNumerica.Insertar(1, 1.0); // 1 % 3 = 1
-    std::cout << "Insertando (1, 1.0): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") << ". Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    resultadoOperacion = tablaNumerica.Insertar(4, 4.0); // 4 % 3 = 1 (colisión con 1)
-    std::cout << "Insertando (4, 4.0): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") << ". Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    resultadoOperacion = tablaNumerica.Insertar(7, 7.0); // 7 % 3 = 1 (colisión con 1, 4)
-    std::cout << "Insertando (7, 7.0): " << (resultadoOperacion ? "Exito (nuevo)" : "Fallo (ya existe)") << ". Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    // Ahora todos los elementos (1,4,7) deberían estar en la cubeta 1. Capacidad es 3.
-    // Todos los elementos (3) están en 1 bucket, FC = 3/3 = 1.0
-            
-    std::cout << "\n === ESTADO DE tablaNumerica DESPUES DE INSERCIONES (con colisiones) ===" << std::endl;
+    std::cout << "\n === ESTADO FINAL DE tablaNumerica DESPUES DE INSERCIONES AGRESIVAS ===" << std::endl;
     tablaNumerica.MostrarTabla();
 
-    std::cout << "\n Probando Eliminar en tablaNumerica (con colisiones)" << std::endl;
-    // Eliminar el del medio de la cadena de colisión (4)
-    resultadoOperacion = tablaNumerica.Eliminar(4);
-    std::cout << "Eliminando 4 (del medio de la cadena): " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-              << ". Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    std::cout << "\n === ESTADO DE tablaNumerica DESPUES DE ELIMINAR 4 ===" << std::endl;
-    tablaNumerica.MostrarTabla(); // Deberían quedar 1 y 7 en la cubeta 1
+    std::cout << "\nProbando Buscar en tablaNumerica (con colisiones y rehashes)" << std::endl;
+    for (int clave: clavesParaColision) {
+        resultadoOperacion = tablaNumerica.Buscar(clave, valorEncontradoDouble);
+        std::cout << "Buscando " << clave << ": " << (resultadoOperacion ? "Encontrado" : "No encontrado");
+        if (resultadoOperacion) {
+            std::cout << ", Valor: " << valorEncontradoDouble << ((valorEncontradoDouble == clave * valorBase)
+                                                                      ? " (Correcto)"
+                                                                      : " (INCORRECTO!)") << std::endl;
+        } else {
+            std::cout << " (ERROR: Deberia encontrarse!)" << std::endl;
+        }
+    }
+    resultadoOperacion = tablaNumerica.Buscar(999, valorEncontradoDouble);
+    std::cout << "Buscando 999: " << (resultadoOperacion ? "Encontrado" : "No encontrado") << std::endl;
 
-    // Eliminar la cabeza de la cadena de colisión (7, ya que insertamos al principio)
-    resultadoOperacion = tablaNumerica.Eliminar(7);
-    std::cout << "Eliminando 7 (cabeza de la cadena): " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-              << ". Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    std::cout << "\n === ESTADO DE tablaNumerica DESPUES DE ELIMINAR 7 ===" << std::endl;
-    tablaNumerica.MostrarTabla(); // Debería quedar 1 en la cubeta 1
+    std::cout << "\nProbando Eliminar en tablaNumerica (con colisiones y rehashes)" << std::endl;
+    int clavesParaEliminar[] = {5, 0, 10, 3, 7};
+    for (int clave: clavesParaEliminar) {
+        resultadoOperacion = tablaNumerica.Eliminar(clave);
+        std::cout << "Eliminando " << clave << ": " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
+                << ". Elementos: " << tablaNumerica.ObtenerNumElementos()
+                << ". Capacidad: " << tablaNumerica.ObtenerCapacidad() << std::endl;
+        resultadoOperacion = tablaNumerica.Buscar(clave, valorEncontradoDouble);
+        std::cout << "Buscando " << clave << " post-eliminacion: " << (resultadoOperacion
+                                                                           ? "Encontrado (ERROR!)"
+                                                                           : "No encontrado (Correcto)") << std::endl;
+    }
+    std::cout << "\n === ESTADO FINAL DE tablaNumerica DESPUES DE ELIMINACIONES AGRESIVAS ===" << std::endl;
+    tablaNumerica.MostrarTabla();
+    std::cout << "--- FIN: Pruebas Agresivas de Colision/Rehash (tablaNumerica) ---" << std::endl;
+}
 
-    // Eliminar el último de la cadena (1)
-    resultadoOperacion = tablaNumerica.Eliminar(1);
-    std::cout << "Eliminando 1 (ultimo de la cadena): " << (resultadoOperacion ? "Exito" : "Fallo (no existe)")
-              << ". Elementos: " << tablaNumerica.ObtenerNumElementos() << std::endl;
-    std::cout << "\n === ESTADO DE tablaNumerica DESPUES DE ELIMINAR 1 ===" << std::endl;
-    tablaNumerica.MostrarTabla(); // Debería estar vacía
+void probarMetodosUtilitarios() {
+    std::cout << "--- INICIO: Pruebas de Metodos Utilitarios ---" << std::endl;
+    TablaHash<std::string, int, HasherString64> tablaUtil(5);
 
-    // Este es el final de tus pruebas originales, el resto son solo las llamadas a MostrarTabla que ya estaban
-    // miTabla.MostrarTabla(); // Esta ya está vacía
-    // tablaNumerica.MostrarTabla(); // Esta ya está vacía
+    std::cout << "\nEstado inicial tablaUtil:" << std::endl;
+    std::cout << "  EstaVacia()=" << (tablaUtil.EstaVacia() ? "true" : "false")
+            << ", Elementos=" << tablaUtil.ObtenerNumElementos()
+            << ", Capacidad=" << tablaUtil.ObtenerCapacidad()
+            << ", FactorCarga=" << tablaUtil.FactorCarga() << std::endl;
+    tablaUtil.MostrarTabla();
 
-    std::cout << "\n\n--- Pruebas Completas ---" << std::endl;
-    return 0;
+    std::cout << "\nInsertando 3 elementos en tablaUtil..." << std::endl;
+    tablaUtil.Insertar("uno", 1);
+    tablaUtil.Insertar("dos", 2);
+    tablaUtil.Insertar("tres", 3);
+    std::cout << "Despues de insertar:" << std::endl;
+    std::cout << "  EstaVacia()=" << (tablaUtil.EstaVacia() ? "true" : "false")
+            << ", Elementos=" << tablaUtil.ObtenerNumElementos()
+            << ", Capacidad=" << tablaUtil.ObtenerCapacidad()
+            << ", FactorCarga=" << tablaUtil.FactorCarga() << std::endl;
+    tablaUtil.MostrarTabla();
+
+    std::cout << "\nInsertando 1 elemento mas (esperando rehash si FC > 0.75)..." << std::endl;
+    tablaUtil.Insertar("cuatro", 4);
+    std::cout << "Despues de insertar 'cuatro':" << std::endl;
+    std::cout << "  EstaVacia()=" << (tablaUtil.EstaVacia() ? "true" : "false")
+            << ", Elementos=" << tablaUtil.ObtenerNumElementos()
+            << ", Capacidad=" << tablaUtil.ObtenerCapacidad()
+            << ", FactorCarga=" << tablaUtil.FactorCarga() << std::endl;
+    tablaUtil.MostrarTabla();
+
+    std::cout << "\nLlamando a tablaUtil.Vaciar()..." << std::endl;
+    tablaUtil.Vaciar();
+    std::cout << "Despues de Vaciar():" << std::endl;
+    std::cout << "  EstaVacia()=" << (tablaUtil.EstaVacia() ? "true" : "false")
+            << ", Elementos=" << tablaUtil.ObtenerNumElementos()
+            << ", Capacidad=" << tablaUtil.ObtenerCapacidad()
+            << ", FactorCarga=" << tablaUtil.FactorCarga() << std::endl;
+    tablaUtil.MostrarTabla();
+
+    std::cout << "\nInsertando en tablaUtil despues de Vaciar()..." << std::endl;
+    tablaUtil.Insertar("nuevo_uno", 101);
+    tablaUtil.Insertar("nuevo_dos", 202);
+    std::cout << "Despues de insertar 2 elementos en tablaUtil vaciada:" << std::endl;
+    std::cout << "  EstaVacia()=" << (tablaUtil.EstaVacia() ? "true" : "false")
+            << ", Elementos=" << tablaUtil.ObtenerNumElementos()
+            << ", Capacidad=" << tablaUtil.ObtenerCapacidad()
+            << ", FactorCarga=" << tablaUtil.FactorCarga() << std::endl;
+    tablaUtil.MostrarTabla();
+    std::cout << "--- FIN: Pruebas de Metodos Utilitarios ---" << std::endl;
 }

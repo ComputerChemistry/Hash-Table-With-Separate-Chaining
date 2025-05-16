@@ -13,7 +13,6 @@
 
 #include <cstdint>
 #include <string>
-#include <stdexcept> // Incluido para std::runtime_error, aunque no se usa directamente aquí.
 
 #include "xxh64.hpp"
 
